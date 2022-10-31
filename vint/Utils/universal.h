@@ -29,11 +29,11 @@ namespace Vint {
 		namespace EspSettings {
 			bool box_esp = true;
 			bool name_esp = false;
-			bool skel_esp = false;
 			bool head_esp = true;
-			bool line_esp = true;
-			bool health_esp = true;
-			bool dist_esp = false;
+			bool skel_esp = false;
+			bool line_esp = false;
+			bool health_esp = false;
+			bool dist_esp = true;
 
 			int type = 0;
 		}
@@ -45,7 +45,7 @@ namespace Vint {
 			FLinearColor chams_color = { 0, 1, 0, 1 };
 		}
 
-		namespace misc {
+		namespace MiscSettings {
 			bool skinchanger = false;
 			bool bunnyhop = true;
 

@@ -18,6 +18,7 @@ namespace Valorant {
 		{
 			reinterpret_cast<void (*)(void*, UObject*, void*)>(module_base + 0x3520430)(class_, function, params);
 		}
+
 		TArray<struct AGameObject*> FindAllGameObjects(UObject* WorldContextObject)
 		{
 
@@ -36,9 +37,30 @@ namespace Valorant {
 
 	class ACameraManager {
 	public:
-		FMinimalViewInfo GetCamera()
-		{
-			return read<FMinimalViewInfo>((uintptr_t)this + 0x1260);
+		FRotator GetCameraRotation() { // Function Engine.PlayerCameraManager.GetCameraRotation // (Native|Public|HasDefaults|BlueprintCallable|BlueprintPure|Const) // @ game+0x54c5510
+			static UObject* Function = UObject::StaticFindObject(nullptr, nullptr, L"Engine.PlayerCameraManager.GetCameraRotation", false);
+			if (!Function) {
+				return {};
+			}
+			struct {
+				FRotator Out;
+			} Parameters;
+
+			Function->ProcessEvent(this, Function, &Parameters);
+			return Parameters.Out;
+
+		}
+		FVector GetCameraLocation() { // Function Engine.PlayerCameraManager.GetCameraLocation // (Native|Public|HasDefaults|BlueprintCallable|BlueprintPure|Const) // @ game+0x54c54c0
+			static UObject* Function = UObject::StaticFindObject(nullptr, nullptr, L"Engine.PlayerCameraManager.GetCameraLocation", false);
+			if (!Function) {
+				return {};
+			}
+			struct {
+				FVector Out;
+			} Parameters;
+
+			Function->ProcessEvent(this, Function, &Parameters);
+			return Parameters.Out;
 		}
 	};
 
@@ -48,197 +70,185 @@ namespace Valorant {
 		void SetAresOutlineMode(EAresOutlineMode Mode, bool bPropagateToChildren)
 		{
 			UObject* Function = UObject::StaticFindObject(nullptr, nullptr, L"Engine.MeshComponent.SetAresOutlineMode", false);
-			if (!Function)
-			{
+			if (!Function) {
 				return;
 			}
-			struct
-			{
+			struct {
 				EAresOutlineMode Mode;
 				bool bPropagateToChildren;
-			}Parameters;
+			} Parameters;
 			Parameters.Mode = Mode;
 			Parameters.bPropagateToChildren = bPropagateToChildren;
+
 			Function->ProcessEvent(this, Function, &Parameters);
 		}
 
 		void SetIsFirstPerson(bool Value)
 		{
-			static UObject* Function;
-			if (!Function)
-			{
-				Function = UObject::StaticFindObject(0, 0, L"PrimitiveComponent.SetIsFirstPerson", false);
+			static UObject* Function = UObject::StaticFindObject(0, 0, L"PrimitiveComponent.SetIsFirstPerson", false);
+			if (!Function) {
+				return;
 			}
-
 			struct {
-				bool val;
-			} Params;
+				bool Value;
+			} Parameters;
+			Parameters.Value = Value;
 
-			Params.val = Value;
-
-			Function->ProcessEvent(this, Function, &Params);
+			Function->ProcessEvent(this, Function, &Parameters);
 		}
 
 		FTransform K2_GetComponentToWorld() {
-			static UObject* Function;
-			if (!Function)
-			{
-				Function = UObject::StaticFindObject(0, 0, L"Engine.SceneComponent.K2_GetComponentToWorld", false);
+			static UObject* Function = UObject::StaticFindObject(0, 0, L"Engine.SceneComponent.K2_GetComponentToWorld", false);
+			if (!Function) {
+				return {};
 			}
-
 			struct {
-				FTransform out;
-			} Params;
-			Function->ProcessEvent(this, Function, &Params);
-			return Params.out;
+				FTransform Out;
+			} Parameters;
+
+			Function->ProcessEvent(this, Function, &Parameters);
+			return Parameters.Out;
 		}
 
-		FVector GetEntityBone(int id) {
-			DWORD_PTR array = read<uintptr_t>((uintptr_t)this + offsets::bone_array);
-
-			FTransform bone = read<FTransform>(array + (id * 0x30));
-
-			FTransform ComponentToWorld = this->K2_GetComponentToWorld();
-			D3DMATRIX Matrix;
-
-			Matrix = MatrixMultiplication(bone.ToMatrixWithScale(), ComponentToWorld.ToMatrixWithScale());
-
-			return FVector(Matrix._41, Matrix._42, Matrix._43);
+		FVector GetBone(std::int32_t index) {
+			FMatrix matrix = {};
+			reinterpret_cast<FMatrix* (*)(UMeshComponent*, FMatrix*, std::int32_t)>(module_base + offsets::bone_matrix)(this, &matrix, index);
+			return { matrix.w.X, matrix.w.Y, matrix.w.Z };
 		}
 	};
 
 	class AActor;
 
-	class APlayerController {
+	class APlayerController : public UObject {
 	public:
-		AActor* GetShooterCharacter() {
-			UObject* Function = UObject::StaticFindObject(nullptr, nullptr, L"ShooterGame.AresPlayerController.GetShooterCharacter", false);
-			if (!Function)
-			{
+		ACameraManager* GetPlayerCameraManager() {
+			UObject* Function = UObject::StaticFindObject(nullptr, nullptr, L"ShooterGame.AresPlayerController.GetPlayerCameraManager", false);
+			if (!Function) {
 				return nullptr;
 			}
 			struct
 			{
+				ACameraManager* Out;
+			} Parameters;
+
+			Function->ProcessEvent(this, Function, &Parameters);
+			return Parameters.Out;
+		}
+
+		AActor* GetShooterCharacter() {
+			UObject* Function = UObject::StaticFindObject(nullptr, nullptr, L"ShooterGame.AresPlayerController.GetShooterCharacter", false);
+			if (!Function) {
+				return nullptr;
+			}
+			struct {
 				AActor* Out;
 			}Parameters;
 			Function->ProcessEvent(this, Function, &Parameters);
 			return Parameters.Out;
 		}
 
-		float InputYawScale()
-		{
-			return read<float>((uintptr_t)this + 0x5e4);
-		}
-
-		float InputPitchScale()
-		{
-			return read<float>((uintptr_t)this + 0x5e8);
-		}
-
-		ACameraManager* CameraManager()
-		{
-			return read<ACameraManager*>((uintptr_t)this + 0x478);
-		}
-
-		void AddYawInput(float Val)
-		{
-			static UObject* Function;
-			if (!Function)
-			{
-				Function = UObject::StaticFindObject(0, 0, L"PlayerController.AddYawInput", false);
+		void AddPitchInput(float value) {
+			UObject* Function = UObject::StaticFindObject(nullptr, nullptr, L"Engine.PlayerController.AddPitchInput", false);
+			if (!Function) {
+				return;
 			}
 
-			struct {
-				float _Val;
-			} Params;
-
-			Params._Val = Val;
-
-			Function->ProcessEvent(this, Function, &Params);
+			Function->ProcessEvent(this, Function, &value);
 		}
 
-		void AddPitchInput(float Val)
-		{
-			static UObject* Function;
-			if (!Function)
-			{
-				Function = UObject::StaticFindObject(0, 0, L"PlayerController.AddPitchInput", false);
+		void AddYawInput(float value) {
+			UObject* Function = UObject::StaticFindObject(nullptr, nullptr, L"Engine.PlayerController.AddYawInput", false);
+			if (!Function) {
+				return;
 			}
 
+			Function->ProcessEvent(this, Function, &value);
+		}
+
+		float GetMouseSensitivity() {
+			UObject* Function = UObject::StaticFindObject(nullptr, nullptr, L"ShooterGame.ShooterPlayerController.GetMouseSensitivity", false);
+			if (!Function) {
+				return 0.0f;
+			}
 			struct {
-				float _Val;
-			} Params;
+				float Out;
+			} Parameters;
 
-			Params._Val = Val;
-
-			Function->ProcessEvent(this, Function, &Params);
+			Function->ProcessEvent(this, Function, &Parameters);
+			return Parameters.Out;
 		}
 
 		bool ProjectWorldLocationToScreen(FVector WorldLocation, FVector* ScreenLocation)
 		{
-			static UObject* Function;
-			if (!Function)
-			{
-				Function = UObject::StaticFindObject(0, 0, L"PlayerController.ProjectWorldLocationToScreen", false);
+			static UObject* Function = UObject::StaticFindObject(0, 0, L"PlayerController.ProjectWorldLocationToScreen", false);
+			if (!Function) {
+				return false;
 			}
-
 			struct {
-				FVector _WorldLocation;
-				FVector2D _ScreenLocation;
-				bool _bPlayerViewportRelative;
-				bool _ReturnValue;
-			} Params;
+				FVector WorldLocation;
+				FVector2D ScreenLocation;
+				bool bPlayerViewportRelative;
+				bool Out;
+			} Parameters;
 
-			Params._WorldLocation = WorldLocation;
-			Params._bPlayerViewportRelative = false;
+			Parameters.WorldLocation = WorldLocation;
+			Parameters.bPlayerViewportRelative = false;
 
-			Function->ProcessEvent(this, Function, &Params);
+			Function->ProcessEvent(this, Function, &Parameters);
 
-			ScreenLocation->X = Params._ScreenLocation.X;
-			ScreenLocation->Y = Params._ScreenLocation.Y;
+			ScreenLocation->X = Parameters.ScreenLocation.X;
+			ScreenLocation->Y = Parameters.ScreenLocation.Y;
 			ScreenLocation->Z = 0.f;
 
-			return Params._ReturnValue;
+			return Parameters.Out;
 		}
 
-		bool LineOfSightTo(uintptr_t Other, FVector ViewPoint, bool bAlternateChecks)
+		FRotator GetControlRotation()
 		{
-			static UObject* Function;
-			if (!Function)
-			{
-				Function = UObject::StaticFindObject(0, 0, L"Controller.LineOfSightTo", false);
+			UObject* Function = UObject::StaticFindObject(nullptr, nullptr, L"Engine.Controller.GetControlRotation", false);
+			if (!Function) {
+				return { 0,0,0 };
 			}
-
 			struct {
-				uintptr_t _Other;
-				FVector _ViewPoint;
-				bool _bAlternateChecks;
-				bool _ReturnValue;
-			} Params;
+				FRotator Out;
+			} Parameters;
+			Function->ProcessEvent(this, Function, &Parameters);
+			return Parameters.Out;
+		}
 
-			Params._Other = Other;
-			Params._ViewPoint = ViewPoint;
-			Params._bAlternateChecks = bAlternateChecks;
+		bool line_of_sight_to(const AActor* Target, FVector ViewPoint = {}, bool AlternateChecks = false) {
+			static UObject* Function = UObject::StaticFindObject(nullptr, nullptr, L"Engine.Controller.LineOfSightTo", false);
 
-			Function->ProcessEvent(this, Function, &Params);
+			if (!Function) {
+				return false;
+			}
+			struct {
+				const AActor* Target;
+				FVector ViewPoint;
+				bool AlternateChecks;
+				bool Out;
+			} Parameters;
 
-			return Params._ReturnValue;
+			Parameters.Target = Target;
+			Parameters.ViewPoint = ViewPoint;
+			Parameters.AlternateChecks = AlternateChecks;
+
+			Function->ProcessEvent(this, Function, &Parameters);
+			return Parameters.Out;
 		}
 
 		void FOV(float NewFov)
 		{
-			static UObject* Function;
-			if (!Function)
-			{
-				Function = UObject::StaticFindObject(0, 0, L"PlayerController.FOV", false);
+			static UObject* Function = UObject::StaticFindObject(0, 0, L"PlayerController.FOV", false);
+			if (!Function) {
+				return;
 			}
-
 			struct {
-				float _NewFov;
-			} Params;
-			Params._NewFov = NewFov;
+				float NewFov;
+			} Parameters;
+			Parameters.NewFov = NewFov;
 
-			Function->ProcessEvent(this, Function, &Params);
+			Function->ProcessEvent(this, Function, &Parameters);
 		}
 	};
 
@@ -289,11 +299,6 @@ namespace Valorant {
 
 	};
 
-	struct AAresEquippable
-	{
-
-	};
-
 	struct UEquippableSkinDataAsset
 	{
 
@@ -307,19 +312,258 @@ namespace Valorant {
 
 	};
 
+	namespace KismetMathLibrary {
+		UObject* Static_Class() {
+			return UObject::StaticFindObject(nullptr, nullptr, L"Engine.Default__KismetMathLibrary", false);
+		}
+
+		FRotator FindLookAtRotation(FVector Start, FVector Target) {
+			UObject* Function = UObject::StaticFindObject(nullptr, nullptr, L"Engine.KismetMathLibrary.FindLookAtRotation", false);
+			if (!Function) {
+				return {};
+			}
+			struct {
+				FVector Start;
+				FVector Target;
+				FRotator Out;
+			} Parameters;
+			Parameters.Start = Start;
+			Parameters.Target = Target;
+
+			Function->ProcessEvent(Static_Class(), Function, &Parameters);
+			return Parameters.Out;
+		}
+
+		FRotator RInterpTo_Constant(const FRotator& current, const FRotator& target, float delta_time, float speed) {
+			UObject* Function = UObject::StaticFindObject(nullptr, nullptr, L"Engine.KismetMathLibrary.RInterpTo_Constant", false);
+			if (!Function) {
+				return {};
+			}
+			struct {
+				FRotator current;
+				FRotator target;
+				float delta_time;
+				float speed;
+				FRotator Out;
+			} Parameters;
+			Parameters.current = current;
+			Parameters.target = target;
+			Parameters.delta_time = delta_time;
+			Parameters.speed = speed;
+
+			Function->ProcessEvent(Static_Class(), Function, &Parameters);
+			return Parameters.Out;
+		}
+
+		FRotator RInterpTo(const FRotator& current, const FRotator& target, float delta_time, float speed) {
+			UObject* Function = UObject::StaticFindObject(nullptr, nullptr, L"Engine.KismetMathLibrary.RInterpTo", false);
+			if (!Function) {
+				return {};
+			}
+			struct {
+				FRotator current;
+				FRotator target;
+				float delta_time;
+				float speed;
+
+				FRotator Out;
+			} Parameters;
+			Parameters.current = current;
+			Parameters.target = target;
+			Parameters.delta_time = delta_time;
+			Parameters.speed = speed;
+
+			Function->ProcessEvent(Static_Class(), Function, &Parameters);
+			return Parameters.Out;
+		}
+
+		FRotator NormalizedDeltaRotator(const FRotator& a, const FRotator& b) {
+			UObject* Function = UObject::StaticFindObject(nullptr, nullptr, L"Engine.KismetMathLibrary.NormalizedDeltaRotator", false);
+			if (!Function) {
+				return {};
+			}
+			struct {
+				FRotator a;
+				FRotator b;
+				
+				FRotator Out;
+			} Parameters;
+			Parameters.a = a;
+			Parameters.b = b;
+
+			Function->ProcessEvent(Static_Class(), Function, &Parameters);
+			return Parameters.Out;
+		}
+	}
+
+	namespace GameplayStatics {
+		UObject* Static_Class() {
+			return UObject::StaticFindObject(0, 0, L"Engine.Default__GameplayStatics", false);
+		}
+
+		float get_world_delta_seconds(UObject* WorldContext) {
+			UObject* Function = UObject::StaticFindObject(nullptr, nullptr, L"Engine.GameplayStatics.GetWorldDeltaSeconds", false);
+			if (!Function) {
+				return 0.0f;
+			}
+			struct {
+				UObject* WorldContext;
+				float Out;
+			} Parameters;
+
+			Parameters.WorldContext = WorldContext;
+
+			Function->ProcessEvent(Static_Class(), Function, &Parameters);
+			return Parameters.Out;
+		}
+	}
+
+	namespace KismetSystemLibrary {
+		UObject* Static_Class() {
+			return UObject::StaticFindObject(nullptr, nullptr, L"Engine.Default__KismetSystemLibrary", false);
+		}
+		void call_remote_function(UObject* function, void* args, void* out_args = nullptr, void* stack = nullptr) {
+			return reinterpret_cast<void (*)(UObject*, UObject*, void*, void*, void*)>(module_base + 0x3520430)(Static_Class(), function, args, out_args, stack);
+		}
+
+		FString GetObjectName(UObject* Object) {
+			static UObject* Function = UObject::StaticFindObject(nullptr, nullptr, L"Engine.KismetSystemLibrary.GetObjectName", false);
+			if (!Function) {
+				return L"";
+			}
+			struct {
+				UObject* Object;
+				FString Out;
+			} Parameters;
+			Parameters.Object = Object;
+
+			Function->ProcessEvent(Static_Class(), Function, &Parameters);
+			return Parameters.Out;
+		}
+
+		bool contains(FString SearchIn, FString SubString, bool UseCase = false, bool SearchFromEnd = false) {
+			static UObject* Function = UObject::StaticFindObject(nullptr, nullptr, L"Engine.KismetStringLibrary.Contains", false);
+			if (!Function) {
+
+			}
+			struct {
+				FString SearchIn;
+				FString SubString;
+				bool UseCase;
+				bool SearchFromEnd;
+				bool Out;
+			} Parameters;
+
+			Parameters.SearchIn = SearchIn;
+			Parameters.SubString = SubString;
+			Parameters.UseCase = UseCase;
+			Parameters.SearchFromEnd = SearchFromEnd;
+
+			Function->ProcessEvent(Static_Class(), Function, &Parameters);
+
+			return Parameters.Out;
+		}
+
+		bool StartsWith(FString SourceString, FString InPrefix) {
+			static UObject* Function = UObject::StaticFindObject(nullptr, nullptr, L"Engine.KismetStringLibrary.StartsWith", false);
+			if (!Function) {
+				return false;
+			}
+			struct {
+				FString SourceString;
+				FString InPrefix;
+				ESearchCase SearchCase;
+				bool Out;
+			} Parameters;
+			Parameters.SourceString = SourceString;
+			Parameters.InPrefix = InPrefix;
+			Parameters.SearchCase = ESearchCase::IgnoreCase;
+
+			Function->ProcessEvent(Static_Class(), Function, &Parameters);
+			return Parameters.Out;
+		}
+	}
+
+	struct AAresEquippable
+	{
+		struct type {
+			const wchar_t* search = nullptr;
+			const char* config = nullptr;
+
+			std::int32_t index = 0;
+
+			const bool IsValid() const noexcept {
+				return this->search != nullptr || this->config != nullptr;
+			}
+		};
+
+		static inline type types[] = {
+					{ L"basepistol", "classic" },
+					{ L"sawedoffshotgun", "shorty" },
+					{ L"automaticpistol", "frenzy" },
+					{ L"lugerpistol", "ghost" },
+					{ L"revolverpistol", "sheriff" },
+
+					{ L"vector", "stinger" },
+					{ L"submachinegun_mp5", "spectre" },
+
+					{ L"pumpshotgun", "bucky" },
+					{ L"automaticshotgun", "judge" },
+
+					{ L"assaultrifle_burst", "bulldog" },
+					{ L"dmr", "guardian" },
+					{ L"assaultrifle_acr", "phantom" },
+					{ L"assaultrifle_ak", "vandal" },
+
+					{ L"leversniperrifle", "marshal" },
+					{ L"boltsniper", "operator" },
+
+					{ L"lightmachinegun", "ares" },
+					{ L"heavymachinegun", "odin" },
+
+					{ L"ability_melee_base", "knife" },
+
+					{ L"gun_sprinter_x_heavylightninggun_production", "neon_x" },
+					{ L"ability_wushu_x_dagger_production", "jett_dagger" }
+		};
+
+		UEquippableSkinDataAsset* GetEquippableSkinDataAsset() {
+			static UObject* Function = UObject::StaticFindObject(nullptr, nullptr, L"ShooterGame.AresEquippable.GetEquippableSkinDataAsset", false);
+			if (!Function) {
+				return nullptr;
+			}
+			struct {
+				UEquippableSkinDataAsset* Out;
+			} Parameters;
+
+			Function->ProcessEvent(this, Function, &Parameters);
+			return Parameters.Out;
+		}
+
+		type GetType() {
+			const FString& name = KismetSystemLibrary::GetObjectName((UObject*)this);
+
+			for (std::int32_t index = 0; index < sizeof(types) / sizeof(type); index++) {
+				AAresEquippable::type type = types[index];
+				if (KismetSystemLibrary::StartsWith(name.c_str(), type.search))
+					return { type.search, type.config, index };
+			}
+
+			return {};
+		}
+	};
+
 	struct UAresInventory
 	{
-		AAresEquippable* GetCurrentEquippable()
-		{
-			UObject* Function = UObject::StaticFindObject(nullptr, nullptr, L"ShooterGame.AresInventory.GetCurrentEquippable", false);
-			if (!Function)
-			{
+		AAresEquippable* GetCurrentEquippable() {
+			static UObject* Function = UObject::StaticFindObject(nullptr, nullptr, L"ShooterGame.AresInventory.GetCurrentEquippable", false);
+			if (!Function) {
 				return 0;
 			}
-			struct
-			{
+			struct {
 				AAresEquippable* Out;
 			}Parameters;
+
 			Function->ProcessEvent(this, Function, &Parameters);
 			return Parameters.Out;
 		}
@@ -327,208 +571,186 @@ namespace Valorant {
 
 	class AActor {
 	public:
-		int32_t ObjectID()
-		{
-			return read<int32_t>((uintptr_t)this + 0x18);
-		}
 
-		int32_t UniqueID()
-		{
-			return read<int32_t>((uintptr_t)this + 0x38);
-		}
-
-		USceneComponent* RootComponent()
-		{
-			return read<USceneComponent*>((uintptr_t)this + 0x230);
-		}
-
-		APlayerState* PlayerState()
-		{
-			return read<APlayerState*>((uintptr_t)this + 0x3F0);
-		}
-
-		UMeshComponent* GetPawnMesh()
-		{
-			UObject* Function = UObject::StaticFindObject(nullptr, nullptr, L"ShooterGame.ShooterCharacter.GetPawnMesh", false);
-			if (!Function)
-			{
-				return 0;
+		UMeshComponent* GetPawnMesh() {
+			static UObject* Function = UObject::StaticFindObject(nullptr, nullptr, L"ShooterGame.ShooterCharacter.GetPawnMesh", false);
+			if (!Function) {
+				return nullptr;
 			}
-			struct
-			{
+			struct {
 				UMeshComponent* Out;
-			}Parameters;
+			} Parameters;
+
 			Function->ProcessEvent(this, Function, &Parameters);
 			return Parameters.Out;
 		}
 
-		bool IsAlive()
-		{
-			UObject* Function = UObject::StaticFindObject(nullptr, nullptr, L"ShooterGame.ShooterCharacter.IsAlive", false);
-			if (!Function)
-			{
-				return 0;
+		bool IsAlive() {
+			static UObject* Function = UObject::StaticFindObject(nullptr, nullptr, L"ShooterGame.ShooterCharacter.IsAlive", false);
+			if (!Function) {
+				return false;
 			}
-			struct
-			{
+			struct {
 				bool Out;
-			}Parameters;
+			} Parameters;
+
 			Function->ProcessEvent(this, Function, &Parameters);
 			return Parameters.Out;
 		}
 
-		float GetHealth()
-		{
-			static UObject* Function;
-			if (!Function)
-			{
-				Function = UObject::StaticFindObject(0, 0, L"ShooterCharacter.GetHealth", false);
+		float GetHealth() {
+			static UObject* Function = UObject::StaticFindObject(0, 0, L"ShooterCharacter.GetHealth", false);
+			if (!Function) {
+				return 0.0f;
 			}
-
 			struct {
-				float _ReturnValue;
-			} Params;
+				float Out;
+			} Parameters;
 
-			Function->ProcessEvent(this, Function, &Params);
-
-			return Params._ReturnValue;
+			Function->ProcessEvent(this, Function, &Parameters);
+			return Parameters.Out;
 		}
 
-		float GetShield()
-		{
-			static UObject* Function;
-			if (!Function)
-			{
-				Function = UObject::StaticFindObject(0, 0, L"ShooterCharacter.GetShield", false);
+		float GetShield() {
+			static UObject* Function = UObject::StaticFindObject(0, 0, L"ShooterCharacter.GetShield", false);
+			if (!Function) {
+				return 0.0f;
 			}
-
 			struct {
-				float _ReturnValue;
-			} Params;
+				float Out;
+			} Parameters;
 
-			Function->ProcessEvent(this, Function, &Params);
-
-			return Params._ReturnValue;
+			Function->ProcessEvent(this, Function, &Parameters);
+			return Parameters.Out;
 		}
 
-		FVector K2_GetActorLocation()
-		{
+		FVector K2_GetActorLocation() {
 			UObject* Function = UObject::StaticFindObject(nullptr, nullptr, L"Engine.Actor.K2_GetActorLocation", false);
-			if (!Function)
-			{
+			if (!Function) {
 				return {};
 			}
-			struct
-			{
+			struct {
 				FVector Out;
-			}Parameters;
+			} Parameters;
+
 			Function->ProcessEvent(this, Function, &Parameters);
 			return Parameters.Out;
 		}
 
-		FVector GetPawnViewLocation()
-		{
+		FVector GetPawnViewLocation() {
 			UObject* Function = UObject::StaticFindObject(nullptr, nullptr, L"ShooterGame.ShooterCharacter.GetPawnViewLocation", false);
-			if (!Function)
-			{
+			if (!Function) {
 				return {};
 			}
-			struct
-			{
+			struct {
 				FVector Out;
-			}Parameters;
+			} Parameters;
+
 			Function->ProcessEvent(this, Function, &Parameters);
 			return Parameters.Out;
 		}
 
-		bool CanJump()
-		{
-			static UObject* Function;
-			if (!Function)
-			{
-				Function = UObject::StaticFindObject(0, 0, L"Character.CanJump", false);
-			}
+		FRotator K2_GetActorRotation() {
+			UObject* Function = UObject::StaticFindObject(nullptr, nullptr, L"Engine.Actor.K2_GetActorRotation", false);
+			FRotator Parameters;
 
-			struct {
-				bool _ReturnValue;
-			} Params;
-
-			Function->ProcessEvent(this, Function, &Params);
-
-			return Params._ReturnValue;
-		}
-
-		bool CanJumpInternal()
-		{
-			static UObject* Function;
-			if (!Function)
-			{
-				Function = UObject::StaticFindObject(0, 0, L"Character.CanJumpInternal", false);
-			}
-
-			struct {
-				bool _ReturnValue;
-			} Params;
-
-			Function->ProcessEvent(this, Function, &Params);
-
-			return Params._ReturnValue;
-		}
-
-		void Jump()
-		{
-			static UObject* Function;
-			if (!Function)
-			{
-				Function = UObject::StaticFindObject(0, 0, L"Character.Jump", false);
-			}
-
-			struct {
-
-			} Params;
-
-			Function->ProcessEvent(this, Function, &Params);
-		}
-
-		void StopJumping()
-		{
-			static UObject* Function;
-			if (!Function)
-			{
-				Function = UObject::StaticFindObject(0, 0, L"Character.StopJumping", false);
-			}
-
-			struct {
-
-			} Params;
-
-			Function->ProcessEvent(this, Function, &Params);
-		}
-
-		UAresInventory* GetInventory()
-		{
-			UObject* Function = UObject::StaticFindObject(nullptr, nullptr, L"ShooterGame.ShooterCharacter.GetInventory", false);
-			struct
-			{
-				UAresInventory* out;
-			}Parameters;
-			AAresEquippable* out;
 			Function->ProcessEvent(this, Function, &Parameters);
-			return Parameters.out;
+			return Parameters;
+		}
+
+		bool CanJump() {
+			static UObject* Function = UObject::StaticFindObject(0, 0, L"Character.CanJump", false);
+			if (!Function) {
+				return false;
+			}
+			struct {
+				bool Out;
+			} Parameters;
+
+			Function->ProcessEvent(this, Function, &Parameters);
+			return Parameters.Out;
+		}
+
+		bool CanJumpInternal() {
+			static UObject* Function = UObject::StaticFindObject(0, 0, L"Character.CanJumpInternal", false);
+			if (!Function) {
+				return false;
+			}
+			struct {
+				bool Out;
+			} Parameters;
+
+			Function->ProcessEvent(this, Function, &Parameters);
+			return Parameters.Out;
+		}
+
+		void Jump() {
+			static UObject* Function = UObject::StaticFindObject(0, 0, L"Character.Jump", false);
+			if (!Function) {
+				return;
+			}
+			struct {
+
+			} Parameters;
+
+			Function->ProcessEvent(this, Function, &Parameters);
+		}
+
+		void StopJumping() {
+			static UObject* Function = UObject::StaticFindObject(0, 0, L"Character.StopJumping", false);
+			if (!Function) {
+				return;
+			}
+			struct {
+
+			} Parameters;
+
+			Function->ProcessEvent(this, Function, &Parameters);
+		}
+
+		UAresInventory* GetInventory() {
+			static UObject* Function = UObject::StaticFindObject(nullptr, nullptr, L"ShooterGame.ShooterCharacter.GetInventory", false);
+			if (!Function) {
+				return nullptr;
+			}
+			struct {
+				UAresInventory* Out;
+			}Parameters;
+
+			Function->ProcessEvent(this, Function, &Parameters);
+			return Parameters.Out;
+		}
+
+		FRotator GetViewRotationFullRecoil() {
+			static UObject* Function = UObject::StaticFindObject(nullptr, nullptr, L"ShooterGame.ShooterCharacter.GetViewRotationFullRecoil", false);
+			if (!Function) {
+				return {};
+			}
+			struct {
+				FRotator Out;
+			} Parameters;
+
+			Function->ProcessEvent(this, Function, &Parameters);
+			return Parameters.Out;
+		}
+
+		FRotator GetViewRotationNoRecoil() {
+			static UObject* Function = UObject::StaticFindObject(nullptr, nullptr, L"ShooterGame.ShooterCharacter.GetViewRotationNoRecoil", false);
+			if (!Function) {
+				return {};
+			}
+			struct {
+				FRotator Out;
+			}Parameters;
+
+			Function->ProcessEvent(this, Function, &Parameters);
+			return Parameters.Out;
 		}
 	};
 
 	class ULevel {
 	public:
-		uintptr_t ActorArray()
-		{
-			return read<uintptr_t>((uintptr_t)this + 0xA0);
-		}
 
-		int32_t ActorCount()
-		{
-			return read<int32_t>((uintptr_t)this + 0xB8);
-		}
 	};
 
 	class UCanvas {
@@ -575,7 +797,7 @@ namespace Valorant {
 			Params._bOutlined = bOutlined;
 			Params._OutlineColor = { 0.0f, 0.0f, 0.0f, 255.f };
 			Params._bCentreX = bCentered;
-			Params._bCentreY = false;
+			Params._bCentreY = true;
 
 			Address->ProcessEvent(this, Address, &Params);
 		}
@@ -601,6 +823,25 @@ namespace Valorant {
 			params.RenderColor = _RenderColor;
 
 			Function->ProcessEvent(this, Function, &params);
+		}
+
+		FVector project(const FVector& world_location) {
+			UObject* function = UObject::StaticFindObject(0, 0, L"Engine.Canvas.K2_Project", false);
+
+			if (function == nullptr)
+				return {};
+
+			struct
+			{
+				FVector world_location;
+				FVector return_value;
+			} params;
+
+			params.world_location = world_location;
+
+			function->ProcessEvent(this, function, &params);
+
+			return params.return_value;
 		}
 	};
 
@@ -714,25 +955,6 @@ namespace Valorant {
 		}
 	}
 
-	namespace KismetSystemLibrary {
-		UObject* Static_Class() {
-			return UObject::StaticFindObject(nullptr, nullptr, L"Engine.Default__KismetSystemLibrary", false);
-		}
-		FString GetObjectName(UObject* Object) {
-			static UObject* Function;
-			if (!Function) {
-				Function = UObject::StaticFindObject(nullptr, nullptr, L"Engine.KismetSystemLibrary.GetObjectName", false);
-			}
-			struct {
-				UObject* Object;
-				FString out;
-			}Params;
-			Params.Object = Object;
-			Function->ProcessEvent(Static_Class(), Function, &Params);
-			return Params.out;
-		}
-	}
-
 	namespace ContentLibrary {
 		UObject* Static_Class()
 		{
@@ -779,6 +1001,65 @@ namespace Valorant {
 			Function->ProcessEvent(Static_Class(), Function, &Parameters);
 		}
 	}
+
+	namespace NoSpread {
+		inline FVector get_error_angle(uint64_t actor, uint64_t firing_state_component) {
+			static auto get_spread_values_fn =
+				(float* (__fastcall*)(uint64_t, float*))(module_base + 0x25DD3C0);
+			static auto get_spread_angles_fn =
+				(void(__fastcall*)(uint64_t, FVector*, float, float, int, int, uint64_t))(module_base + 0x2C73E40);
+			static auto get_firing_location_and_direction_fn =
+				(void(__fastcall*)(uint64_t, FVector*, FVector*))(module_base + 0x2AB4B90);
+			static auto to_vector_and_normalize_fn =
+				(FVector* (__fastcall*)(FVector*, FVector*))(module_base + 0x3268090);
+			static auto to_angle_and_normalize_fn =
+				(FVector* (__fastcall*)(FVector*, FVector*))(module_base + 0x3261F90);
+
+			static uint8_t error_values[4096] = { 0 };
+			static uint8_t seed_data_snapshot[4096] = { 0 };
+			static uint8_t spread_angles[4096] = { 0 };
+			static uint8_t out_spread_angles[4096] = { 0 };
+
+			if (!actor || !firing_state_component)
+				return FVector(0, 0, 0);
+
+			memset(error_values, 0, sizeof(error_values));
+			memset(seed_data_snapshot, 0, sizeof(seed_data_snapshot));
+			memset(spread_angles, 0, sizeof(spread_angles));
+			memset(out_spread_angles, 0, sizeof(out_spread_angles));
+
+			*(uint64_t*)(&out_spread_angles[0]) = (uint64_t)&spread_angles[0];
+			*(int*)(&out_spread_angles[0] + 8) = 1;
+			*(int*)(&out_spread_angles[0] + 12) = 1; //It's a TArray but I'm lazy
+
+			uint64_t seed_data = ReadStub<uint64_t>(firing_state_component + 0x420);
+			memcpy((void*)seed_data_snapshot, (void*)seed_data, sizeof(seed_data_snapshot)); //Make our own copy since we don't want to desync our own seed component
+
+			uint64_t stability_component = ReadStub<uint64_t>(firing_state_component + 0x410);
+			if (stability_component)
+				get_spread_values_fn(stability_component, (float*)&error_values[0]);
+
+			FVector temp1, temp2 = FVector(0, 0, 0);
+			FVector previous_firing_direction, firing_direction = FVector(0, 0, 0);
+			get_firing_location_and_direction_fn(actor, &temp1, &previous_firing_direction);
+			to_vector_and_normalize_fn(&previous_firing_direction, &temp2);
+			to_angle_and_normalize_fn(&temp2, &temp1);
+			previous_firing_direction = temp1;
+			temp1.X += *(float*)(&error_values[0] + 12); //Your recoil angle
+			temp1.Y += *(float*)(&error_values[0] + 16);
+			to_vector_and_normalize_fn(&temp1, &firing_direction);
+
+			float error_degrees = *(float*)(&error_values[0] + 8) + *(float*)(&error_values[0] + 4);
+			float error_power = *(float*)(firing_state_component + 0x3f0);
+			int error_retries = *(int*)(firing_state_component + 0x3f4);
+			get_spread_angles_fn(((uint64_t)&seed_data_snapshot[0]) + 0xE8, &firing_direction, error_degrees, error_power, error_retries, 1, (uint64_t)&out_spread_angles[0]);
+
+			FVector spread_vector = *(FVector*)(&spread_angles[0]);
+			to_angle_and_normalize_fn(&spread_vector, &firing_direction);
+
+			return firing_direction - previous_firing_direction; //Get the difference. Now subtract it against your aimbot!
+		}
+	}
 }
 
 namespace Hook
@@ -804,15 +1085,16 @@ namespace Hook
 	}
 }
 
-namespace Decrypt
+namespace World
 {
-	Valorant::UWorld* UWorld()
+	Valorant::UWorld* ReadWorld()
 	{
-		uintptr_t uworld_key = read<uintptr_t>(module_base + 0x9282978);
-		Valorant::UWorldState uworld_state = read<Valorant::UWorldState>(module_base + 0x9282940);
-		uintptr_t uworld = decrypt_uworld(uworld_key, (uintptr_t*)&uworld_state);
-		uworld = ReadStub<uintptr_t>(uworld);
-
-		return (Valorant::UWorld*)uworld;
+		for (int i = 0; i < sizeof(uworld_names) / sizeof(wchar_t*); i++)
+		{
+			Valorant::UWorld* cache_uworld = (Valorant::UWorld*)::Valorant::UObject::StaticFindObject(nullptr, nullptr, uworld_names[i], false);
+			if (cache_uworld)
+				return cache_uworld;
+		}
+		return nullptr;
 	}
 }

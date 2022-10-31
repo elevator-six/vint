@@ -49,38 +49,38 @@ namespace SkinChanger {
 
 		int equippable_type = FilterWeaponName(KismetSystemLibrary::GetObjectName((UObject*)current_equippable));
 
-        if (equippable_type == 1) {
-            UObject* skin_data_asset = UObject::StaticFindObject(nullptr, reinterpret_cast<UObject*>(-1), L"Default__Melee_Champions2_PrimaryAsset_C", false);
-            UObject* chroma_data_asset = UObject::StaticFindObject(nullptr, reinterpret_cast<UObject*>(-1), L"Default__Melee_Champions2_Lv3_PrimaryAsset_C", false);
+		int random = rand() % (2 - 0 + 1) + 0;
 
-            auto decrypt = ((__int64(__fastcall*)(__int64 a1))(module_base + 0x26132e0));
-            auto check = decrypt((__int64)current_equippable);
-            auto a1 = *reinterpret_cast<uintptr_t*>(check + 0x298);
-            a1 = *reinterpret_cast<uintptr_t*>(a1 + 0xA0);
+		UEquippableSkinDataAsset* current_skin = current_equippable->GetEquippableSkinDataAsset();
 
-            auto old = *reinterpret_cast<int*>(a1 + 0x80);
-            write(a1 + 0x80, 2);
+		UObject* skin_data_asset = nullptr;
+		UObject* chroma_data_asset = nullptr;
 
-            ContentLibrary::ClearWeaponComponents((AActor*)current_equippable);
-            ContentLibrary::ApplySkin((AActor*)current_equippable, (UEquippableSkinDataAsset*)skin_data_asset, (UEquippableSkinChromaDataAsset*)chroma_data_asset, 2, nullptr, -1);
-            write<int>(a1 + 0x80, old);
-        }
-		else if(equippable_type == 14) {
-			UObject* skin_data_asset = UObject::StaticFindObject(nullptr, reinterpret_cast<UObject*>(-1), L"Default__AK_Aquarium_PrimaryAsset_C", false);
-			UObject* chroma_data_asset = UObject::StaticFindObject(nullptr, reinterpret_cast<UObject*>(-1), L"Default__AK_Aquarium_Lv3_PrimaryAsset_C", false);
-
-			auto decrypt = ((__int64(__fastcall*)(__int64 a1))(module_base + 0x26132e0));
-			auto check = decrypt((__int64)current_equippable);
-			auto a1 = *reinterpret_cast<uintptr_t*>(check + 0x298);
-			a1 = *reinterpret_cast<uintptr_t*>(a1 + 0xA0);
-
-			auto old = *reinterpret_cast<int*>(a1 + 0x80);
-			write(a1 + 0x80, 2);
-
-			ContentLibrary::ClearWeaponComponents((AActor*)current_equippable);
-			ContentLibrary::ApplySkin((AActor*)current_equippable, (UEquippableSkinDataAsset*)skin_data_asset, (UEquippableSkinChromaDataAsset*)chroma_data_asset, 2, nullptr, -1);
-			write<int>(a1 + 0x80, old);
+		if (random == 0) {
+			skin_data_asset = UObject::StaticFindObject(nullptr, reinterpret_cast<UObject*>(-1), L"Default__Melee_Soulstealer2_PrimaryAsset_C", false);
+			chroma_data_asset = UObject::StaticFindObject(nullptr, reinterpret_cast<UObject*>(-1), L"Default__Melee_Soulstealer2_v3_PrimaryAsset_C", false);
 		}
+		else if (random == 1) {
+			skin_data_asset = UObject::StaticFindObject(nullptr, reinterpret_cast<UObject*>(-1), L"Default__Melee_Alien_PrimaryAsset_C", false);
+			chroma_data_asset = UObject::StaticFindObject(nullptr, reinterpret_cast<UObject*>(-1), L"Default__Melee_Alien_Standard_PrimaryAsset_C", false);
+		}
+		else if (random == 2) {
+			skin_data_asset = UObject::StaticFindObject(nullptr, reinterpret_cast<UObject*>(-1), L"Default__Melee_Base_Sovereign_PrimaryAsset_C", false);
+			chroma_data_asset = UObject::StaticFindObject(nullptr, reinterpret_cast<UObject*>(-1), L"Default__Melee_Base_Sovereign_Standard_PrimaryAsset_C", false);
+		}
+
+		auto decrypt = ((__int64(__fastcall*)(__int64 a1))(module_base + 0x26132e0));
+		auto check = decrypt((__int64)current_equippable);
+		auto a1 = *reinterpret_cast<uintptr_t*>(check + 0x298);
+		a1 = *reinterpret_cast<uintptr_t*>(a1 + 0xA0);
+
+		auto old = *reinterpret_cast<int*>(a1 + 0x80);
+		write(a1 + 0x80, 2);
+
+		ContentLibrary::ClearWeaponComponents((AActor*)current_equippable);
+		ContentLibrary::ApplySkin((AActor*)current_equippable, (UEquippableSkinDataAsset*)skin_data_asset, (UEquippableSkinChromaDataAsset*)chroma_data_asset, 2, nullptr, -1);
+		write<int>(a1 + 0x80, old);
+		Vint::Global::MiscSettings::skinchanger = false;
 
 		// Not fully implemented, was just testing
 	}

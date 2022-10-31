@@ -84,5 +84,8 @@
     <ClInclude Include="Features\chams.h">
       <Filter>Header Files\Features</Filter>
     </ClInclude>
+    <ClInclude Include="Features\aimbot.h">
+      <Filter>Header Files\Features</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

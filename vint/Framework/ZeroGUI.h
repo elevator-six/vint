@@ -208,7 +208,7 @@ void ClearFirstPos()
 void TextLeft(const char* name, FVector2D pos, FLinearColor color, bool outline)
 {
 	int length = strlen(name) + 1;
-	canvas->K2_DrawText(pos, color, s2wc(name), true, outline);
+	canvas->K2_DrawText(pos, color, s2wc(name), false, outline);
 }
 void TextCenter(const char* name, FVector2D pos, FLinearColor color, bool outline)
 {
@@ -253,7 +253,7 @@ void DrawFilledCircle(FVector2D pos, float r, FLinearColor color)
 		Draw_Line(FVector2D{ pos.X, pos.Y }, FVector2D{ pos.X + cosf(angle) * r, pos.Y + sinf(angle) * r }, 1.0f, color);
 	}
 }
-void DrawCircle(FVector2D pos, int radius, int numSides, FLinearColor Color)
+void DrawCircle(FVector2D pos, int radius, int numSides, FLinearColor Color, float thickness = 1.0f)
 {
 	float PI = 3.1415927f;
 
@@ -270,7 +270,7 @@ void DrawCircle(FVector2D pos, int radius, int numSides, FLinearColor Color)
 		V[Count + 1].X = X2;
 		V[Count + 1].Y = Y2;
 		//Draw_Line(FVector2D{ pos.X, pos.Y }, FVector2D{ X2, Y2 }, 1.0f, Color); // Points from Centre to ends of circle
-		Draw_Line(FVector2D{ V[Count].X, V[Count].Y }, FVector2D{ X2, Y2 }, 1.0f, Color);// Circle Around
+		Draw_Line(FVector2D{ V[Count].X, V[Count].Y }, FVector2D{ X2, Y2 }, thickness, Color);// Circle Around
 	}
 }
 
@@ -527,13 +527,9 @@ void Checkbox(const char* name, bool* value)
 		//drawFilledRect(FVector2D{ pos.X + 9, pos.Y + 9 }, size - 18, size - 18, Colors::Checkbox_Hovered);
 	}
 
-
-
-	//Text
-	FVector2D textPos = FVector2D{ pos.X + size + 30.0f, pos.Y + size / 2 + - 5.0f };
+	FVector2D textPos = FVector2D{ pos.X + size + 5.0f, pos.Y + size / 2 };
 	//if (!TextOverlapedFromActiveElement(textPos))
 	TextLeft(name, textPos, FLinearColor{ 1.0f, 1.0f, 1.0f, 1.0f }, false);
-
 
 	sameLine = false;
 	last_element_pos = pos;
@@ -1269,17 +1265,17 @@ void FilledRect(float x, float y, float w, float h, FLinearColor color)
 
 void DrawCornerBox(float x, float y, float w, float h, const FLinearColor color)
 {
-	Draw_Line(FVector2D{x, y}, FVector2D{x + w / 4.f, y}, 2, color);
-	Draw_Line(FVector2D{x, y}, FVector2D{x, y + h / 4.f}, 2, color);
+	Draw_Line(FVector2D{x, y}, FVector2D{x + w / 4.f, y}, 1, color);
+	Draw_Line(FVector2D{x, y}, FVector2D{x, y + h / 4.f}, 1, color);
 
-	Draw_Line(FVector2D{x + w, y}, FVector2D{x + w - w / 4.f, y}, 2, color);
-	Draw_Line(FVector2D{x + w, y}, FVector2D{x + w, y + h / 4.f}, 2, color);
+	Draw_Line(FVector2D{x + w, y}, FVector2D{x + w - w / 4.f, y}, 1, color);
+	Draw_Line(FVector2D{x + w, y}, FVector2D{x + w, y + h / 4.f}, 1, color);
 
-	Draw_Line(FVector2D{x, y + h}, FVector2D{x + w / 4.f, y + h}, 2, color);
-	Draw_Line(FVector2D{x, y + h}, FVector2D{x, y + h - h / 4.f}, 2, color);
+	Draw_Line(FVector2D{x, y + h}, FVector2D{x + w / 4.f, y + h}, 1, color);
+	Draw_Line(FVector2D{x, y + h}, FVector2D{x, y + h - h / 4.f}, 1, color);
 
-	Draw_Line(FVector2D{x + w, y + h}, FVector2D{x + w, y + h - h / 4.f}, 2, color);
-	Draw_Line(FVector2D{x + w, y + h}, FVector2D{x + w - w / 4.f, y + h}, 2, color);
+	Draw_Line(FVector2D{x + w, y + h}, FVector2D{x + w, y + h - h / 4.f}, 1, color);
+	Draw_Line(FVector2D{x + w, y + h}, FVector2D{x + w - w / 4.f, y + h}, 1, color);
 }
 
 void DrawNormalBox(int x, int y, int w, int h, int borderPx, FLinearColor color)
@@ -1294,9 +1290,9 @@ void DrawNormalBox(int x, int y, int w, int h, int borderPx, FLinearColor color)
 	FilledRect(x + w + borderPx, y + h - h + borderPx * 2, borderPx, h, color);
 }
 
-auto Draw2DBox(FVector2D RootPosition, float Width, float Height, FLinearColor Color) -> void
+auto Draw2DBox(FVector2D RootPosition, FVector2D HeadPostion, float Width, float Height, FLinearColor Color) -> void
 {
-	DrawNormalBox(RootPosition.X - Width / 2, RootPosition.Y - Height / 2, Width, Height, 1, Color);
+	DrawNormalBox(RootPosition.X - (Width / 2), HeadPostion.Y, Width, Height, 1, Color);
 }
 
 auto CornerBox(FVector RootPosition, float Width, float Height, FLinearColor Color) -> void
@@ -1317,7 +1313,7 @@ auto DrawHealthBar(FVector RootPosition, float Width, float Height, float Health
 
 	int HPBoxHeight = Height * (Health / 100);
 
-	Draw_Line(FVector2D{ HPBox_X, HPBox_Y }, FVector2D{ HPBox_X + HPBoxWidth, HPBox_Y + HPBoxHeight }, 2, bar_color);
+	Draw_Line(FVector2D{ HPBox_X, HPBox_Y }, FVector2D{ HPBox_X + HPBoxWidth, HPBox_Y + HPBoxHeight }, 3, bar_color);
 }
 
 auto DrawShieldBar(FVector RootPosition, float Width, float Height, float shield, float RelativeDistance)-> void
@@ -1333,5 +1329,5 @@ auto DrawShieldBar(FVector RootPosition, float Width, float Height, float shield
 
 	int HPBoxHeight = Height * (shield / 100);
 
-	Draw_Line(FVector2D{ HPBox_X, HPBox_Y }, FVector2D{ HPBox_X + HPBoxWidth, HPBox_Y + HPBoxHeight }, 2, { 0.43f, 0.77f, 0.99f, 1.0f });
+	Draw_Line(FVector2D{ HPBox_X, HPBox_Y }, FVector2D{ HPBox_X + HPBoxWidth, HPBox_Y + HPBoxHeight }, 3, { 0.43f, 0.77f, 0.99f, 1.0f });
 }

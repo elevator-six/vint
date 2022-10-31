@@ -4,7 +4,23 @@
 #include <locale>
 #include <d3d9types.h>
 
+#define M_PI       3.14159265358979323846   // pi
+
 namespace Engine {
+	const wchar_t* uworld_names[] = {
+		L"/Game/Maps/Init/Init.Init",
+		L"/Game/Maps/Menu/MainMenuV2.MainMenuV2",
+		L"/Game/Maps/PregameV2/CharacterSelectPersistentLevel.CharacterSelectPersistentLevel",
+		L"/Game/Maps/Poveglia/Range.Range",
+		L"/Game/Maps/Ascent/Ascent.Ascent",
+		L"/Game/Maps/Canyon/Canyon.Canyon",
+		L"/Game/Maps/Bonsai/Bonsai.Bonsai",
+		L"/Game/Maps/Duality/Duality.Duality",
+		L"/Game/Maps/Foxtrot/Foxtrot.Foxtrot",
+		L"/Game/Maps/Port/Port.Port",
+		L"/Game/Maps/Triad/Triad.Triad",
+	};
+
 	template<class T>
 	struct TArray
 	{
@@ -102,6 +118,7 @@ namespace Engine {
 		float Dot(FVector v) {
 			return X * v.X + Y * v.Y + Z * v.Z;
 		}
+		inline float Dot(const FVector& b) const { return (X * b.X) + (Y * b.Y) + (Z * b.Z); }
 
 		float Distance(FVector v) {
 			return float(sqrtf(powf(v.X - X, 2.0) + powf(v.Y - Y, 2.0) + powf(v.Z - Z, 2.0)));
@@ -110,6 +127,43 @@ namespace Engine {
 		float Length() {
 			return sqrt(X * X + Y * Y + Z * Z);
 		}
+
+		float Length2D() {
+			return sqrtf((X * X) + (Y * Y));
+		}
+
+		void make_absolute() {
+			X = std::abs(X);
+			Y = std::abs(Y);
+			Z = std::abs(Z);
+		}
+
+		FVector Clamp()
+		{
+			FVector clamped = { X, Y, 0 };
+			while (clamped.Y < -180.0f)
+				clamped.Y += 360.0f;
+			while (clamped.Y > 180.0f)
+				clamped.Y -= 360.0f;
+			while (clamped.X < -180.0f)
+				clamped.X += 360.0f;
+			while (clamped.X > 180.0f)
+				clamped.X -= 360.0f;
+			return clamped;
+		}
+		FVector ToRotator()
+		{
+			FVector rotator;
+			rotator.X = -(float)atan(Z / Length2D()) * (float)(180.0f / 3.14159265358979323846);
+			rotator.Y = (float)atan(Y / X) * (float)(180.0f / 3.14159265358979323846);
+			rotator.Z = (float)0.f;
+			if (X >= 0.f)
+				rotator.Y += 180.0f;
+			return rotator;
+		}
+
+		inline float MagnitudeSqr() const { return Dot(*this); }
+		inline float Magnitude() const { return std::sqrtf(MagnitudeSqr()); }
 
 		bool operator==(FVector v) {
 			return ((X == v.X) && (Y == v.Y) && (Z == v.Z));
@@ -127,6 +181,10 @@ namespace Engine {
 			return FVector(X / v, Y / v, Z / v);
 		}
 
+		FVector operator+(FVector v) const {
+			return FVector(X + v.X, Y + v.Y, Z + v.Z);
+		}
+
 		FVector operator+(FVector v) {
 			return FVector(X + v.X, Y + v.Y, Z + v.Z);
 		}
@@ -136,6 +194,10 @@ namespace Engine {
 		}
 
 		FVector operator*(float v) {
+			return FVector(X * v, Y * v, Z * v);
+		}
+
+		FVector operator*(float v) const {
 			return FVector(X * v, Y * v, Z * v);
 		}
 
@@ -202,6 +264,23 @@ namespace Engine {
 		}
 	};
 
+	class FPlane : public FVector {
+	public:
+		FPlane() : w(0.f) {}
+
+	public:
+		float w;
+	};
+
+	class FMatrix {
+	public:
+		FMatrix() : x(FPlane()), y(FPlane()), z(FPlane()), w(FPlane()) {}
+	public:
+		FPlane x;
+		FPlane y;
+		FPlane z;
+		FPlane w;
+	};
 
 	struct FLinearColor {
 		float R;
@@ -219,6 +298,25 @@ namespace Engine {
 		float Pitch;
 		float Yaw;
 		float Roll;
+
+		FVector ToVector()
+		{
+			float angle, sr, sp, sy, cr, cp, cy;
+
+			angle = this->Yaw * (M_PI * 2 / 360);
+			sy = sin(angle);
+			cy = cos(angle);
+
+			angle = this->Pitch * (M_PI * 2 / 360);
+			sp = sin(angle);
+			cp = cos(angle);
+
+			angle = this->Roll * (M_PI * 2 / 360);
+			sr = sin(angle);
+			cr = cos(angle);
+
+			return FVector(cp * cy, cp * sy, -sp);
+		}
 	};
 
 	struct FMinimalViewInfo {
@@ -243,5 +341,10 @@ namespace Engine {
 		Alliance_Any = 3,
 		Alliance_Count = 4,
 		Alliance_MAX = 5
+	};
+	enum class ESearchCase : uint8 {
+		CaseSensitive = 0,
+		IgnoreCase = 1,
+		ESearchCase_MAX = 2
 	};
 }

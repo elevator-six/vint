@@ -28,6 +28,7 @@ UWorld* world = nullptr;
 #include "Framework/menu.h"
 
 #include "Features/esp.h"
+#include "Features/aimbot.h"
 #include "Features/chams.h"
 #include "Features/skin_changer.h"
 
@@ -46,6 +47,8 @@ void DrawTransition(uintptr_t this_, UCanvas* Canvas)
 	APlayerController* controller = ShooterGameBlueprints::GetFirstLocalPlayerController(world);
 	AActor* local_acator = controller->GetShooterCharacter();
 	TArray<AActor*> actors = ShooterGameBlueprints::FindAllShooterCharactersWithAlliance(world, local_acator, EAresAlliance::Alliance_Any, false, true);
+	ACameraManager* camera_manager = controller->GetPlayerCameraManager();
+	FVector my_location = {};
 
 	for (int i = 0; i < actors.Num(); i++) {
 		if (!actors.IsValidIndex(i))
@@ -53,10 +56,11 @@ void DrawTransition(uintptr_t this_, UCanvas* Canvas)
 
 		AActor* actor = actors[i];
 
-		FVector my_camera_location;
 		if (actor == local_acator) {
-			my_camera_location = actor->K2_GetActorLocation();
-			SkinChanger::Commit(actor);
+			if (Vint::Global::MiscSettings::skinchanger) {
+				SkinChanger::Commit(actor);
+			}
+			my_location = actor->K2_GetActorLocation();
 			continue;
 		}
 
@@ -71,8 +75,12 @@ void DrawTransition(uintptr_t this_, UCanvas* Canvas)
 		float shield = actor->GetShield();
 
 		if (mesh && IsAlive) {
-			Chams::Activate(mesh);
-			Walls::Render(controller, mesh, actor_location, my_camera_location, health, shield);
+			if (Vint::Global::ChamsSettings::enabled)
+				Chams::Activate(mesh);
+
+			Walls::Render(controller, mesh, actor_location, camera_manager, health, shield);
+
+			Aimbot::Tick(controller, actor);
 		}
 	}
 
@@ -89,9 +97,8 @@ void Initialize()
 	freopen_s(&fDummy, "CONOUT$", "w", stderr);
 	freopen_s(&fDummy, "CONOUT$", "w", stdout);
 
-	world = Decrypt::UWorld();
+	world = World::ReadWorld();
 	UViewportClient* ViewportClient = world->OwningGameInstance()->LocalPlayers()->LocalPlayer()->ViewportClient();
-	APlayerController* PlayerController = world->OwningGameInstance()->LocalPlayers()->LocalPlayer()->PlayerController();
 
 	Hook::hook((PVOID)ViewportClient, DrawTransition, 0x68, (PVOID*)&DrawTransitionOriginal);
 }
